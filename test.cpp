@@ -28,7 +28,7 @@ template <typename F1, typename F2> static void check_function(F1 f1, F2 f2) {
     puts("fail");
 }
 #else
-template <typename F> static void check_function(F f, unsigned x) {
+template <typename F> static void check_function(F f, int x) {
   if (x == make_constant(f))
     puts("ok");
   else
@@ -70,7 +70,7 @@ int main() {
   check_function(~_1, 0x00);
   check_function((~_a & _b) | (_a & ~_b), 0x3C);
   check_function(_b ^ _c, 0x66);
-  check_function(_a & _b ^ _b & _c ^ _a & _c, 0xE8);
+  check_function((_a & _b) ^ (_b & _c) ^ (_a & _c), 0xE8);
   check_function((~_b | ~_c) & (~_a ^ ~_b ^ _c), 0x16);
 #endif
   return 0;

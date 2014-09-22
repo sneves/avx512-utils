@@ -17,22 +17,30 @@
 #include <immintrin.h>
 #endif
 
+#if __cplusplus < 201103L
+#define TERNLOG_CONSTEXPR
+#else
+#define TERNLOG_CONSTEXPR constexpr
+#endif
+
 namespace ternlog {
 namespace detail {
 template <int X> struct boolean {};
 
 #define DefineUnaryOperator(Op)                                                \
-  template<int X> constexpr boolean<Op X> operator Op(boolean<X>) {            \
-    return {};                                                                 \
-  }                                                                            \
+  template <int X>                                                             \
+  TERNLOG_CONSTEXPR inline boolean<Op X> operator Op(boolean<X>) {             \
+    return boolean<Op X>();                                                    \
+  }
 
 DefineUnaryOperator(~)
 #undef DefineUnaryOperator
 
 #define DefineBinaryOperator(Op)                                               \
-  template<int X, int Y>                                                       \
-  constexpr boolean<X Op Y> operator Op(boolean<X>, boolean<Y>) {              \
-    return {};                                                                 \
+  template <int X, int Y>                                                      \
+  TERNLOG_CONSTEXPR inline boolean<X Op Y> operator Op(boolean<X>,             \
+                                                       boolean<Y>) {           \
+    return boolean<X Op Y>();                                                  \
   }
 
 DefineBinaryOperator(^)
@@ -41,7 +49,7 @@ DefineBinaryOperator(|)
 #undef DefineBinaryOperator
 
 template<int X>
-constexpr int make_constant(boolean<X>) {
+TERNLOG_CONSTEXPR inline int make_constant(boolean<X>) {
   return X & 0xff;
 }
 
@@ -83,16 +91,18 @@ inline __m512i _mm512_maskz_boolean_epi64(__mmask8 k, __m512i a, __m512i b,
 }
 #endif
 
-} // detail
-
-inline namespace placeholders {
-constexpr detail::boolean<0xf0> _a{};
-constexpr detail::boolean<0xcc> _b{};
-constexpr detail::boolean<0xaa> _c{};
-constexpr detail::boolean<0xff> _1{};
-constexpr detail::boolean<0x00> _0{};
+namespace placeholders {
+static const TERNLOG_CONSTEXPR boolean<0xf0> _a = {};
+static const TERNLOG_CONSTEXPR boolean<0xcc> _b = {};
+static const TERNLOG_CONSTEXPR boolean<0xaa> _c = {};
+static const TERNLOG_CONSTEXPR boolean<0xff> _1 = {};
+static const TERNLOG_CONSTEXPR boolean<0x00> _0 = {};
 }
 
+} // detail
+
+namespace placeholders = detail::placeholders;
+using namespace placeholders;
 using detail::make_constant;
 #if defined(__AVX512F__)
 using detail::_mm512_boolean_epi32;
@@ -104,4 +114,5 @@ using detail::_mm512_maskz_boolean_epi64;
 #endif
 } // ternlog
 
+#undef TERNLOG_CONSTEXPR
 #endif
